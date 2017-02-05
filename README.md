@@ -3,16 +3,16 @@ Plotting software for Rentzepis Lab bacteria data
 
 ## Installation:
 1. Go to the releases tab
-2. Download the latest release and run the *setup.exe
+2. Download the latest release and run the setup.exe
 3. The setup will automatically download the MATLAB Compiler Runtime (about ~700 MB).
 
 ## File Naming:
 
 ###For files labeled according to irradiation time:
- <pre><b>x</b>min_<b>s</b>.txt</pre>
+ <pre><b>X</b>min_<b>s</b>.txt</pre>
   where
   
-  a. **x**: a number between 0 and 100 in intervals of 0.5
+  a. **X**: a number between 0 and 100 in intervals of 0.5
   
   b. **s**: a number between 1 and 5. This is selected by the "set" control on the GUI.
           If the current experiment has one data set, *s* won't be used.
@@ -20,17 +20,18 @@ Plotting software for Rentzepis Lab bacteria data
   **Example**: `0.5min_1.txt`,`62min.txt`
   
 ###For files labeled according to concentration:
- <pre><b>x</b>ngperml_<b>s</b>.txt</pre>
+ <pre><b>X</b>ngperml_<b>s</b>.txt</pre>
   where
   
-  a. **x**: a number between 1 and 1000 in intervals of 1
+  a. **X**: a number between 1 and 1000 in intervals of 1
   
   b. **s**: a number between 1 and 5. This is selected by the "set" control on the GUI.
           If the current experiment has one data set, *s* won't be used.
           
   **Example**: `1ngperml_1.txt`,`50ngperml.txt`
   
-  ## Operation:
+  
+## Operation:
  
   1. Put all your files from the data set under investigation in one folder.
   
