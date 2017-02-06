@@ -48,3 +48,6 @@ Temporary Items
 
 # Data folders
 /Data
+/TRY
+/prj
+*.asv
