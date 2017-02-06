@@ -22,7 +22,7 @@ function varargout = gui(varargin)
 
 % Edit the above text to modify the response to help gui
 
-% Last Modified by GUIDE v2.5 04-Feb-2017 15:35:18
+% Last Modified by GUIDE v2.5 06-Feb-2017 14:10:57
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -72,7 +72,6 @@ function varargout = gui_OutputFcn(hObject, eventdata, handles)
 % Get default command line output from handles structure
 varargout{1} = handles.output;
 
-
 function nextPlotButton_Callback(hObject, eventdata, handles)
 if ~isfield(handles, 'fitCounter')
     return
@@ -82,7 +81,7 @@ if handles.fitCounter == length(handles.fitResult)
 end
 handles.fitCounter = handles.fitCounter+1;
 guidata(hObject, handles);
-plotFit(handles);
+plotFit(handles, handles.fitCounter, handles.fitPlotAxes, handles.mainGUI);
 adjustAxes(handles,'fit');
 
 function prevPlotButton_Callback(hObject, eventdata, handles)
@@ -94,7 +93,7 @@ if handles.fitCounter == 1
 end
 handles.fitCounter = handles.fitCounter-1;
 guidata(hObject, handles);
-plotFit(handles);
+plotFit(handles, handles.fitCounter, handles.fitPlotAxes, handles.mainGUI);
 adjustAxes(handles,'fit');
 
 function runButton_Callback(hObject, eventdata, handles)
@@ -105,11 +104,11 @@ else
     return;
 end
 h = waitbar(0,'Reading Parameters.')
-set = num2str(handles.setMenu.Value);
-if strcmp(set, '6') % If no set
-    set = '';
+sett = num2str(handles.setMenu.Value);
+if strcmp(sett, '6') % If no sett
+    sett = '';
 end
-handles.set = set;
+handles.sett = sett;
 if handles.typeMenu.Value == 1
     suffix = 'min';
 elseif handles.typeMenu.Value == 2
@@ -122,7 +121,7 @@ nPoints = str2double(handles.avgPointsEdit.String);
 wSize = str2double(handles.avgWindowEdit.String);
 
 waitbar(0.25,h,'Reading Files.')
-[header, avgPeak, fitPeak, fitResult, lambda, data] = main(folder, suffix, set, startLambda, endLambda, wSize, nPoints);
+[header, avgPeak, fitPeak, fitResult, lambda, data] = main(folder, suffix, sett, startLambda, endLambda, wSize, nPoints);
 if isempty(data)
     warndlg('No files found with current parameters. Aborting.');
     close(h);
@@ -160,7 +159,7 @@ handles.fitCounter = 1;
 min = lower(handles.fitPlotMinEdit.String);
 max = lower(handles.fitPlotMaxEdit.String);
 str = {'Auto', 'auto', 'a', 'A', 'automatic', 'Automatic'};
-plotFit(handles);
+plotFit(handles, handles.fitCounter, handles.fitPlotAxes, handles.mainGUI);
 adjustAxes(handles,'fit');
 
 guidata(hObject, handles);
@@ -171,20 +170,31 @@ min = eval(sprintf('lower(handles.%sPlotMinEdit.String)', ax));
 max = eval(sprintf('lower(handles.%sPlotMaxEdit.String)', ax));
 eval(sprintf('axes(handles.%sPlotAxes)', ax));
 str = {'Auto', 'auto', 'a', 'A', 'automatic', 'Automatic'};
-if ismember(min, str) || ismember(max, str)
-    
-    axis auto
+if ismember(min, str) || ismember(max, str)   
+    xlim auto
 else
     min = str2double(min);
     max = str2double(max);
     xlim([min, max]);
 end
+if strcmp(ax,'fit')
+    min = handles.yMinEdit.String;
+    max = handles.yMaxEdit.String;
+    if ismember(min, str) || ismember(max, str)   
+        ylim auto
+    else
+        min = str2double(min);
+        max = str2double(max);
+        ylim([min, max]);
+    end
+end
 
-function plotFit(handles)
-axes(handles.fitPlotAxes);
+function plotFit(handles, i, ax, f)
+if strcmp(f.Tag, 'mainGUI')
+    axes(ax);
+end
 cla(gca);
 
-i = handles.fitCounter;
 plot(handles.lambda, feval(handles.fitResult{i},handles.lambda), '-r', 'LineWidth', 2);
 hold on;
 plot(handles.lambda, handles.data(:, i), '-ks', 'MarkerFaceColor', 'k');
@@ -221,13 +231,13 @@ function exportButton_Callback(hObject, eventdata, handles)
         return;
     end
 
-    set = handles.set;
-    if isempty(set)
-        set = [];
+    sett = handles.sett;
+    if isempty(sett)
+        sett = [];
     else
-        set = ['_', set];
+        sett = ['_', sett];
     end
-    defaultName = [handles.folder, '\', datestr(date, 'yyyymmdd'), set];
+    defaultName = fullfile(handles.folder, datestr(date, 'yyyymmdd'), sett);
 
     extensions = {'*.mat',...
      'MATLAB MAT file (*.mat)';
@@ -242,18 +252,17 @@ function exportButton_Callback(hObject, eventdata, handles)
     if isequal(filename,0) || isequal(pathname,0) % Canceled
        return;
     else
-       fullfile = [pathname, '\', filename];
+       fullf = fullfile(pathname, filename);
        if index == 1 % mat
-           save(fullfile, 'data');
+           save(fullf, 'data');
        elseif index == 2 %csv
-           dlmwrite(fullfile,data,'delimiter',',','precision',5)
+           dlmwrite(fullf,data,'delimiter',',','precision',5)
        elseif index == 3 % space-delimited txt
-           dlmwrite(fullfile,data,'delimiter',' ','precision',5)
+           dlmwrite(fullf,data,'delimiter',' ','precision',5)
        else
            error('Cant save in this extensions');
        end
     end
-
 
 function undockMain_Callback(hObject, eventdata, handles)
     f = figure;
@@ -265,7 +274,7 @@ function undockMain_Callback(hObject, eventdata, handles)
     end
     ax = gca;
     ax.Units = 'normalized';
-    set(gca, 'Position', [0.1300    0.1100    0.7750    0.8150]);
+    sett(gca, 'Position', [0.1300    0.1100    0.7750    0.8150]);
 
 function undockFit_Callback(hObject, eventdata, handles)
     f = figure;
@@ -277,8 +286,7 @@ function undockFit_Callback(hObject, eventdata, handles)
     end
     ax = gca;
     ax.Units = 'normalized';
-    set(gca, 'Position', [0.1300    0.1100    0.7750    0.8150]);
-
+    sett(gca, 'Position', [0.1300    0.1100    0.7750    0.8150]);
 
 function mainGUI_KeyPressFcn(hObject, eventdata, handles)
 switch eventdata.Key
@@ -291,3 +299,32 @@ switch eventdata.Key
     case 'leftarrow'
         prevPlotButton_Callback(hObject, eventdata, handles)
 end
+
+
+% --- Executes on button press in saveAllButton.
+function saveAllButton_Callback(hObject, eventdata, handles)
+% hObject    handle to saveAllButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+sett = handles.sett;
+if isempty(sett)
+    sett = [];
+else
+    sett = ['_', sett];
+end
+folder = uigetdir;
+format = handles.formatMenu.String{handles.formatMenu.Value};
+h = waitbar(0,'Please wait...');
+n = length(handles.fitResult);
+for i=1:n
+    waitbar(i/n,h, ['Saving image ', num2str(i), ' of ', num2str(n)]);
+    f = figure;
+    ax = axes();
+    ax.Visible = 'off';
+    f.Visible = 'off';
+    plotFit(handles, i, ax, f);
+    filename = fullfile(folder, [num2str(handles.header(i)), handles.type, handles.sett]);
+    saveas(f, [filename, '.' format]);
+    close(f);
+end
+close(h);
