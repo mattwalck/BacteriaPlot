@@ -137,8 +137,11 @@ plot(header, avgPeak, 'ro', 'LineWidth', 2);
 hold on;
 plot(header, fitPeak, 'bx', 'LineWidth', 2);
 hold off;
-xlabel('Irradiation Time [min]');
-ylabel('Peak Intensity [a.u.]');
+xlabel('Irradiation Time (min)');
+if strcmp(suffix, 'ngperml')
+    xlabel('Concentration [ng/ml]');
+end
+ylabel('Peak Intensity (a.u.)');
 grid on;
 legend('Avg. Peak', 'Gaussian Peak');
 adjustAxes(handles,'main');
