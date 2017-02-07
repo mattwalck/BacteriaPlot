@@ -82,7 +82,6 @@ end
 handles.fitCounter = handles.fitCounter+1;
 guidata(hObject, handles);
 plotFit(handles, handles.fitCounter, handles.fitPlotAxes, handles.mainGUI);
-adjustAxes(handles,'fit');
 
 function prevPlotButton_Callback(hObject, eventdata, handles)
 if ~isfield(handles, 'fitCounter')
@@ -121,14 +120,15 @@ nPoints = str2double(handles.avgPointsEdit.String);
 wSize = str2double(handles.avgWindowEdit.String);
 
 waitbar(0.25,h,'Reading Files.')
-[header, avgPeak, fitPeak, fitResult, lambda, data] = main(folder, suffix, sett, startLambda, endLambda, wSize, nPoints);
+[header, avgPeak, fitPeak, lambdaPeak, fitResult, lambda, data] = ...
+      main(folder, suffix, sett, startLambda, endLambda, wSize, nPoints);
 if isempty(data)
     warndlg('No files found with current parameters. Aborting.');
     close(h);
     return;
 end
 
-% Plot the main plot
+% Plot the main plot (edit here Matt)
 waitbar(0.5,h,'Ploting result.');
 pause(0.5);
 axes(handles.mainPlotAxes);
@@ -146,11 +146,11 @@ adjustAxes(handles,'main');
 % Output data table
 handles.dataTable.Data = [header.' avgPeak.' fitPeak.'];
 
-handles.type = suffix;
-handles.fitResult = fitResult;
-handles.data = data;
-handles.lambda = lambda;
-handles.header = header;
+handles.type = suffix; % concentration vs time
+handles.fitResult = fitResult; % Cell array of fits
+handles.data = data; % Data table for exporting to CSV
+handles.lambda = lambda; % wavelengths
+handles.header = header; % name of each experiment
 
 % Plot fit 
 waitbar(0.75,h,'Ploting fit.')
@@ -165,10 +165,13 @@ adjustAxes(handles,'fit');
 guidata(hObject, handles);
 close(h)
 
-function adjustAxes(handles, ax)
+function adjustAxes(handles, ax, hAx)
 min = eval(sprintf('lower(handles.%sPlotMinEdit.String)', ax));
 max = eval(sprintf('lower(handles.%sPlotMaxEdit.String)', ax));
-eval(sprintf('axes(handles.%sPlotAxes)', ax));
+if nargin < 3, hAx = []; end
+if isempty(hAx)
+    eval(sprintf('axes(handles.%sPlotAxes)', ax));
+end
 str = {'Auto', 'auto', 'a', 'A', 'automatic', 'Automatic'};
 if ismember(min, str) || ismember(max, str)   
     xlim auto
@@ -189,7 +192,7 @@ if strcmp(ax,'fit')
     end
 end
 
-function plotFit(handles, i, ax, f)
+function plotFit(handles, i, ax, f) % Plot Fit (edit this Matt)
 if strcmp(f.Tag, 'mainGUI')
     axes(ax);
 end
@@ -306,14 +309,29 @@ function saveAllButton_Callback(hObject, eventdata, handles)
 % hObject    handle to saveAllButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+if ~isfield(handles, 'data')
+    warndlg('No data in memory. Please run program.');
+    return;
+end
 sett = handles.sett;
 if isempty(sett)
     sett = [];
 else
     sett = ['_', sett];
 end
-folder = uigetdir;
 format = handles.formatMenu.String{handles.formatMenu.Value};
+if ~strcmp(format, 'pptx')
+    folder = uigetdir(handles.folder);
+else
+    defaultName = fullfile(handles.folder, [datestr(date, 'yyyymmdd'), sett, '.pptx']);
+    [filename, pathname] = uiputfile('.pptx', 'Save as', defaultName);
+    isOpen  = exportToPPTX();
+    if ~isempty(isOpen)
+        % If PowerPoint already started, then close first and then open a new one
+        exportToPPTX('close');
+    end
+    exportToPPTX('new');
+end   
 h = waitbar(0,'Please wait...');
 n = length(handles.fitResult);
 for i=1:n
@@ -323,8 +341,22 @@ for i=1:n
     ax.Visible = 'off';
     f.Visible = 'off';
     plotFit(handles, i, ax, f);
-    filename = fullfile(folder, [num2str(handles.header(i)), handles.type, handles.sett]);
-    saveas(f, [filename, '.' format]);
+    adjustAxes(handles,'fit', ax);
+    if ~strcmp(format, 'pptx')
+        filename = fullfile(folder, [num2str(handles.header(i)), handles.type, handles.sett]);
+        saveas(f, [filename, '.' format]);
+    else
+        f.Color = [1 1 1];
+        exportToPPTX('addslide');
+        exportToPPTX('addpicture',f);
+    end   
     close(f);
+end
+if strcmp(format, 'pptx')
+    try
+        exportToPPTX('saveandclose',fullfile(pathname, filename));
+    catch ME
+        warndlg(ME.message);
+    end
 end
 close(h);
