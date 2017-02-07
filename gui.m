@@ -144,7 +144,7 @@ legend('Avg. Peak', 'Gaussian Peak');
 adjustAxes(handles,'main');
 
 % Output data table
-handles.dataTable.Data = [header.' avgPeak.' fitPeak.'];
+handles.dataTable.Data = [header.' lambdaPeak.' avgPeak.' fitPeak.'];
 
 handles.type = suffix; % concentration vs time
 handles.fitResult = fitResult; % Cell array of fits
