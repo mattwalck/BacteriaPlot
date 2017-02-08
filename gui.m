@@ -82,6 +82,7 @@ end
 handles.fitCounter = handles.fitCounter+1;
 guidata(hObject, handles);
 plotFit(handles, handles.fitCounter, handles.fitPlotAxes, handles.mainGUI);
+adjustAxes(handles,'fit');
 
 function prevPlotButton_Callback(hObject, eventdata, handles)
 if ~isfield(handles, 'fitCounter')
