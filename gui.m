@@ -82,7 +82,6 @@ end
 handles.fitCounter = handles.fitCounter+1;
 guidata(hObject, handles);
 plotFit(handles, handles.fitCounter, handles.fitPlotAxes, handles.mainGUI);
-adjustAxes(handles,'fit');
 
 function prevPlotButton_Callback(hObject, eventdata, handles)
 if ~isfield(handles, 'fitCounter')
@@ -97,13 +96,13 @@ plotFit(handles, handles.fitCounter, handles.fitPlotAxes, handles.mainGUI);
 adjustAxes(handles,'fit');
 
 function runButton_Callback(hObject, eventdata, handles)
-if isfield(handles, 'folder') % Folder selected
+if isfield(handles, 'folder'); % Folder selected
     folder = handles.folder;
 else
     warndlg('No folder selected.');
     return;
 end
-h = waitbar(0,'Reading Parameters.');
+h = waitbar(0,'Reading Parameters.')
 sett = num2str(handles.setMenu.Value);
 if strcmp(sett, '6') % If no sett
     sett = '';
