@@ -20,7 +20,7 @@ function result = loadData(folder, suffix, set)
     k = [];
 
     for i=t0:delta:t_f
-        filename = [folder, '\', num2str(i), suffix, set, ext];
+        filename = fullfile(folder, [num2str(i), suffix, set, ext]);
         if exist(filename, 'file') == 2
                 A{2*i+1} = readTXT(filename);
                 if isempty(A{2*i+1})
